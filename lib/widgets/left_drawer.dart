@@ -111,6 +111,7 @@ class LeftDrawer extends StatelessWidget {
                                       backgroundColor: colorScheme.primaryContainer,
                                     ),
                                     pickerAction: FilesystemPickerActionThemeData(
+                                      location: FilesystemPickerActionLocation.floatingCenter,
                                       backgroundColor: colorScheme.primaryContainer,
                                       textStyle: TextStyle(color: colorScheme.onPrimaryContainer),
                                     )

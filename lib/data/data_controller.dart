@@ -25,27 +25,18 @@ class DataController extends ChangeNotifier {
   Future<void> init() async {
     prefs = await SharedPreferences.getInstance();
 
-    if (kDebugMode) {
-      await prefs.clear();
-    }
+    // if (kDebugMode) {
+    //   await prefs.clear();
+    // }
 
-    loadUserSettings();
+    await loadUserSettings();
     loadUserData();
   }
 
-  void loadUserSettings() async {
+  Future<void> loadUserSettings() async {
     _firstTimeStart = prefs.getBool('firstTimeStart') ?? true;
 
     _fontSize = prefs.getDouble('fontSize') ?? 18.0;
-
-    var defDir = await getApplicationDocumentsDirectory();
-    var savedDir = prefs.getString('saveDirectory');
-
-    if (savedDir != null && Directory(savedDir).existsSync()) {
-      _saveDirectory = Directory(savedDir);
-    } else {
-      _saveDirectory = defDir;
-    }
 
     int? themeMode = prefs.getInt('themeMode');
     _themeMode = themeMode != null ? ThemeMode.values[themeMode] : ThemeMode.system;
@@ -56,8 +47,17 @@ class DataController extends ChangeNotifier {
         alpha: double.parse(themeColor[0]), 
         red: double.parse(themeColor[1]),
         green: double.parse(themeColor[2]),
-        blue: double.parse(themeColor[3])) : 
-      Colors.indigo;
+        blue: double.parse(themeColor[3])) :
+      Color.fromARGB(199, 48, 136, 230);
+
+    var defDir = await getApplicationDocumentsDirectory();
+    var savedDir = prefs.getString('saveDirectory');
+
+    if (savedDir != null && Directory(savedDir).existsSync()) {
+      _saveDirectory = Directory(savedDir);
+    } else {
+      _saveDirectory = defDir;
+    }
   }
 
   void loadUserData() {
