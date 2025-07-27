@@ -30,22 +30,23 @@ class DocumentAppBar extends StatelessWidget implements PreferredSizeWidget {
       return false; // Do not save if both title and content are empty
     }
 
-    if (dataController.items.any((item) => item.title == titleController.text.trim() && item.id != document.id)) {
-      // If a document with the same title already exists, show an error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('A document with this title already exists.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-      return false; // Do not save if title already exists
-    }
+    // if (dataController.items.any((item) => item.title == titleController.text.trim() && item.id != document.id)) {
+    //   // If a document with the same title already exists, show an error
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text('A document with this title already exists.'),
+    //       backgroundColor: Theme.of(context).colorScheme.error,
+    //     ),
+    //   );
+    //   return false; // Do not save if title already exists
+    // }
 
-    if (document.title != titleController.text) {
-      await dataController.removeItem(document);
-      document.title = titleController.text.trim();
-    }
+    // if (document.title != titleController.text) {
+    //   await dataController.removeItem(document);
+    //   document.title = titleController.text.trim();
+    // }
 
+    document.title = titleController.text.trim();
     document.lastModified = dateTimeNowToInt();
     await dataController.updateItem(document);
 
@@ -66,16 +67,6 @@ class DocumentAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary, size: 32,),
         onPressed: () async {
-          if ((titleController.text.trim().isEmpty) && editorController.plainTextEditingValue.text.trim().length <= 1) {
-            await dataController.removeItem(document);
-            Navigator.of(context).pop();
-            return;
-          } else if (titleController.text.isEmpty) {
-            titleController.text = editorController.plainTextEditingValue.text.isNotEmpty
-                ? editorController.plainTextEditingValue.text.substring(0, editorController.plainTextEditingValue.text.length > 20 ? 20 : editorController.plainTextEditingValue.text.length)
-                : 'Untitled';
-          }
-
           await _saveDocument(context).whenComplete(() {
             Navigator.of(context).pop();
           });
@@ -137,28 +128,28 @@ class DocumentAppBar extends StatelessWidget implements PreferredSizeWidget {
         //     editorController.formatSelection(ParchmentAttribute.center);
         //   },
         // ),
-        RotatingIconButton(
-          icon: Icons.save,
-          onPressed: () async {
-            var saved = await _saveDocument(context);
+        // RotatingIconButton(
+        //   icon: Icons.save,
+        //   onPressed: () async {
+        //     var saved = await _saveDocument(context);
 
-            if (saved) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: colorScheme.primary,
-                  content: Text(
-                    '"${document.title}" saved',
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontSize: TextTheme.of(context).titleMedium?.fontSize,
-                    ),
-                  ),
-                  duration: Duration(seconds: 1),
-                ),
-              );
-            }
-          },
-        ),
+        //     if (saved) {
+        //       ScaffoldMessenger.of(context).showSnackBar(
+        //         SnackBar(
+        //           backgroundColor: colorScheme.primary,
+        //           content: Text(
+        //             '"${document.title}" saved',
+        //             style: TextStyle(
+        //               color: colorScheme.onPrimary,
+        //               fontSize: TextTheme.of(context).titleMedium?.fontSize,
+        //             ),
+        //           ),
+        //           duration: Duration(seconds: 1),
+        //         ),
+        //       );
+        //     }
+        //   },
+        // ),
         RotatingIconButton(
           icon: Icons.link,
           onPressed: () {

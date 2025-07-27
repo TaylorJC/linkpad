@@ -14,7 +14,7 @@ class Document {
 
   factory Document.fromJson(String json) {
     Map<String, dynamic> data = jsonDecode(json);
-    List<dynamic> jsonTags = jsonDecode(data['tags']);
+    List<dynamic> jsonTags = jsonDecode(data['links']);
 
     List<String> links = jsonTags.isNotEmpty ? List.from(jsonTags.cast(), growable: true) : List.empty(growable: true);
 

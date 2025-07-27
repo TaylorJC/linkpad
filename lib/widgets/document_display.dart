@@ -46,15 +46,6 @@ class DocumentDisplay extends StatelessWidget {
         tiles.add(
           InkWell(
             onTap: () {
-              var docContent = dataController.loadDocumentFromDoc(doc);
-              ParchmentDocument parchment;
-
-              if (docContent.isEmpty) {
-                parchment = ParchmentDocument();
-              } else {
-                parchment = ParchmentDocument.fromJson(jsonDecode(docContent));
-              }
-
               Navigator.of(context).push(
                 MaterialPageRoute(
                   fullscreenDialog: true,

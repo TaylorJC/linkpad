@@ -52,70 +52,76 @@ class LeftDrawer extends StatelessWidget {
                       title: 'Save Directory:',
                       child: StatefulBuilder(
                         builder: (context, setState) {
-                          return TextField(
-                            controller: TextEditingController(text: dataController.saveDirectory.path),
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              suffixIcon: Icon(Icons.folder_open, color: colorScheme.onSecondaryContainer),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                          return ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxHeight: 200,
+                              maxWidth: 300,
                             ),
-                            onTap: () async {
-                              var docDir = await getApplicationDocumentsDirectory();
-
-                              var newDir = await FilesystemPicker.open(
-                                context: context,
-                                rootDirectory: docDir,
-                                directory: dataController.saveDirectory,
-                                title: 'Select Save Directory',
-                                fsType: FilesystemType.folder,
-                                pickText: 'Select',
-                                contextActions: [
-                                  FilesystemPickerContextAction(
-                                    text: 'Create New Folder',
-                                    icon: Icon(Icons.create_new_folder),
-                                    action: (context, directory) async {
-                                      var newFolder = await showDialog<String>(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            title: Text('New Folder Name'),
-                                            content: TextField(
-                                              autofocus: true,
-                                              decoration: InputDecoration(hintText: 'Enter folder name'),
-                                              onSubmitted: Navigator.of(context).pop,
-                                            ),
-                                          );
-                                        },
-                                      );
-
-                                      if (newFolder != null && newFolder.isNotEmpty) {
-                                        var newDirectory = Directory('${directory.path}/$newFolder');
-                                        await newDirectory.create();
-                                        return true;
-                                      }
-
-                                      return false;
-                                    },
-                                  ),
-                                ],
-                                theme: FilesystemPickerTheme(
-                                  backgroundColor: colorScheme.surfaceContainer,
-                                  topBar: FilesystemPickerTopBarThemeData(
-                                    backgroundColor: colorScheme.primaryContainer,
-                                  ),
-                                  pickerAction: FilesystemPickerActionThemeData(
-                                    backgroundColor: colorScheme.primaryContainer,
-                                    textStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+                            child: TextField(
+                              controller: TextEditingController(text: dataController.saveDirectory.path),
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Icons.folder_open, color: colorScheme.onSecondaryContainer),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onTap: () async {
+                                var docDir = await getApplicationDocumentsDirectory();
+                            
+                                var newDir = await FilesystemPicker.open(
+                                  context: context,
+                                  rootDirectory: docDir,
+                                  directory: dataController.saveDirectory,
+                                  title: 'Select Save Directory',
+                                  fsType: FilesystemType.folder,
+                                  pickText: 'Select',
+                                  contextActions: [
+                                    FilesystemPickerContextAction(
+                                      text: 'Create New Folder',
+                                      icon: Icon(Icons.create_new_folder),
+                                      action: (context, directory) async {
+                                        var newFolder = await showDialog<String>(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: Text('New Folder Name'),
+                                              content: TextField(
+                                                autofocus: true,
+                                                decoration: InputDecoration(hintText: 'Enter folder name'),
+                                                onSubmitted: Navigator.of(context).pop,
+                                              ),
+                                            );
+                                          },
+                                        );
+                            
+                                        if (newFolder != null && newFolder.isNotEmpty) {
+                                          var newDirectory = Directory('${directory.path}/$newFolder');
+                                          await newDirectory.create();
+                                          return true;
+                                        }
+                            
+                                        return false;
+                                      },
+                                    ),
+                                  ],
+                                  theme: FilesystemPickerTheme(
+                                    backgroundColor: colorScheme.surfaceContainer,
+                                    topBar: FilesystemPickerTopBarThemeData(
+                                      backgroundColor: colorScheme.primaryContainer,
+                                    ),
+                                    pickerAction: FilesystemPickerActionThemeData(
+                                      backgroundColor: colorScheme.primaryContainer,
+                                      textStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+                                    )
                                   )
-                                )
-                              );
-
-                              if (newDir != null) {
-                                dataController.updateSaveDirectory(newDir);
-                              }
-                            },
+                                );
+                            
+                                if (newDir != null) {
+                                  dataController.updateSaveDirectory(newDir);
+                                }
+                              },
+                            ),
                           );
                         },
                       ),

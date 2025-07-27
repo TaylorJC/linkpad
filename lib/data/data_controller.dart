@@ -41,7 +41,7 @@ class DataController extends ChangeNotifier {
     var defDir = await getApplicationDocumentsDirectory();
     var savedDir = prefs.getString('saveDirectory');
 
-    if (savedDir != null) {
+    if (savedDir != null && Directory(savedDir).existsSync()) {
       _saveDirectory = Directory(savedDir);
     } else {
       _saveDirectory = defDir;
@@ -187,7 +187,6 @@ class DataController extends ChangeNotifier {
 
     _items.update(item.id, (val) => item);
 
-    await _updatePrefsList('Documents', item, false);
     await _updatePrefsList('Documents', item, true);
     notifyListeners();
   }
@@ -233,17 +232,17 @@ class DataController extends ChangeNotifier {
     List<String>? docs = prefs.getStringList(listKey);
     String docJson = doc.toJson();
 
-    if (docs == null) {
-      if (add) {
-        docs = {docJson}.toList();
-      } else {
-        return;
+    if (docs == null && !add) { // No docs in the list and trying to remove, do nothing
+      return;
+    } else if (docs == null && add) { // No docs in the list and adding, make the single item a list
+      docs = {docJson}.toList();
+    } else { // Docs in list, remove duplicate key if it exists
+      if (docs!.any((element) => element.contains(doc.id.toString()),)) {
+        docs.removeWhere((docStr) => docStr.contains(doc.id.toString()));
       }
-    } else {
-      if (add && !docs.contains(docJson)) {
+
+      if (add) { // Add the document as json to the list
         docs.add(docJson);
-      } else if (!add) {
-        docs.remove(docJson);
       }
     }
 

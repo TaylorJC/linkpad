@@ -35,6 +35,8 @@ class _DocumentPageState extends State<DocumentPage> {
 
   final FocusNode editorFocusNode = FocusNode();
 
+  final ScrollController scrollController = ScrollController();
+
   // String readDoc(BuildContext context) {
   //   final DataController dataController = DataProvider.require(context);
 
@@ -68,6 +70,7 @@ class _DocumentPageState extends State<DocumentPage> {
     titleController.dispose();
     editorController.dispose();
     editorFocusNode.dispose();
+    scrollController.dispose();
 
     super.dispose();
   }
@@ -97,6 +100,7 @@ class _DocumentPageState extends State<DocumentPage> {
               
               Expanded(
                 child: FleatherEditor(
+                  autofocus: widget.document.title != '',
                   spellCheckConfiguration: SpellCheckConfiguration(
                     spellCheckService: DefaultSpellCheckService(),
                     misspelledTextStyle: TextStyle(
@@ -112,9 +116,14 @@ class _DocumentPageState extends State<DocumentPage> {
               ),
               Align(
                 alignment: Alignment.bottomCenter,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: FleatherToolbar.basic(controller:editorController, hideHeadingStyle: true,))),
+                child: Scrollbar(
+                  controller: scrollController,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    controller: scrollController,
+                    child: FleatherToolbar.basic(controller:editorController, hideHeadingStyle: true,)),
+                )),
             ],
           ),
         ),
