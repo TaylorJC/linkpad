@@ -8,11 +8,6 @@ import 'package:linkpad/data/data_model.dart';
 import 'package:linkpad/data/datetime_parse.dart';
 import 'package:linkpad/widgets/document_page.dart';
 
-enum DocumentDisplayType {
-  List,
-  Grid,
-}
-
 class DocumentDisplay extends StatelessWidget {
   const DocumentDisplay({
     super.key,
@@ -31,7 +26,9 @@ class DocumentDisplay extends StatelessWidget {
     docs.sort((a, b) => b.lastModified.compareTo(a.lastModified));
 
     for (var doc in docs) {
-      var docContent = dataController.loadDocumentFromDoc(doc);
+      final String docContent = dataController.loadDocumentFromDoc(doc);
+      final width = MediaQuery.sizeOf(context).width - (crossAxisCount * 8 + 24) / crossAxisCount;
+
       ParchmentDocument parchment;
 
       if (docContent.isEmpty) {
@@ -41,15 +38,13 @@ class DocumentDisplay extends StatelessWidget {
       }
 
       if (displayType == DocumentDisplayType.Grid) {
-        final width = MediaQuery.sizeOf(context).width - (crossAxisCount * 8 + 24) / crossAxisCount;
-
         tiles.add(
           InkWell(
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   fullscreenDialog: true,
-                  builder: (context) => DocumentPage(document: doc, parchment: parchment),
+                  builder: (context) => DocumentPage(document: doc, parchment: parchment, dataController: dataController,),
                 ),
               );
             },
@@ -109,8 +104,8 @@ class DocumentDisplay extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   gradient: LinearGradient(
                     colors: [
-                      colorScheme.primaryContainer.withAlpha(150),
-                      colorScheme.primaryContainer.withAlpha(0),
+                      colorScheme.primaryContainer.withAlpha(250),
+                      colorScheme.primaryContainer.withAlpha(100),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -122,10 +117,10 @@ class DocumentDisplay extends StatelessWidget {
                     parchment.toPlainText(),
                     style: TextStyle(
                       fontSize: TextTheme.of(context).bodySmall?.fontSize,
-                      color: colorScheme.onSurface.withAlpha(150),
+                      color: colorScheme.onSurface,
                     ),
                     overflow: TextOverflow.ellipsis,
-                    maxLines: 3,
+                    maxLines: 4,
                   ),
                 ),
               ),
@@ -136,6 +131,7 @@ class DocumentDisplay extends StatelessWidget {
         tiles.add(
           ListTile(
             title: Text(doc.title),
+            subtitle: Text(dateTimeIntToReadableString(doc.lastModified)),
             onTap: () {
               var docContent = dataController.loadDocumentFromDoc(doc);
               ParchmentDocument parchment;
@@ -149,7 +145,7 @@ class DocumentDisplay extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   fullscreenDialog: true,
-                  builder: (context) => DocumentPage(document: doc, parchment: parchment),
+                  builder: (context) => DocumentPage(document: doc, parchment: parchment, dataController: dataController,),
                 ),
               );
             },
@@ -171,18 +167,22 @@ class DocumentDisplay extends StatelessWidget {
           ? Stack(
             children: [
               Center(
-                child: Image.asset('assets/pages.png',
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(20),
-                  fit: BoxFit.cover,
-                  width: 400,
-                  height: 400,
+                child: Opacity(
+                  opacity: 0.2,
+                  child: Image.asset('assets/pages_holed.png',
+                    color: Theme.of(context).colorScheme.primary.withAlpha(200),
+                    fit: BoxFit.cover,
+                    colorBlendMode: BlendMode.modulate,
+                    width: 500,
+                    height: 500,
+                  ),
                 ),
               ),
               Center(
                 child: Text(
                   'No documents found.',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
+                    color: Theme.of(context).colorScheme.primary.withAlpha(120),
                     fontSize: TextTheme.of(context).titleLarge?.fontSize,
                   ),
                 ),

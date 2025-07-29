@@ -1,14 +1,13 @@
-import 'dart:convert';
-
 import 'package:fleather/fleather.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:linkpad/data/data_model.dart';
 import 'package:linkpad/widgets/linkpad_appbar.dart';
 
 import '../data/data_controller.dart';
 import 'document_display.dart';
 import 'document_page.dart';
-import 'left_drawer.dart';
+import 'settings_drawer.dart';
 
 /// Main application
 /// Contains the MaterialApp, using the dataController to control the ThemeMode and ColorScheme
@@ -90,11 +89,11 @@ class _LinkPadState extends State<LinkPad> {
                       resizeToAvoidBottomInset: true,
                       drawer: SizedBox(
                         width: MediaQuery.sizeOf(context).width * 0.8, // Set the width of the left drawer to 75% of the screen width
-                        child: LeftDrawer()), // Left drawer for tags and filters// Right drawer for settings
+                        child: SettingsDrawer()), // Left drawer for tags and filters// Right drawer for settings
                       appBar: LinkpadAppbar(),
                       body: Padding(
-                        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom, top: MediaQuery.viewPaddingOf(context).top), 
-                        child:  DocumentDisplay(displayType: documentDisplayType, crossAxisCount: MediaQuery.sizeOf(context).width ~/ 200,), // List of all documents
+                        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom, top: MediaQuery.viewPaddingOf(context).top), 
+                        child:  DocumentDisplay(displayType: widget.dataController.displayType, crossAxisCount: MediaQuery.sizeOf(context).width ~/ 200,), // List of all documents
                       ),
                       floatingActionButton: FloatingActionButton.extended(
                         heroTag: 'New Document',
@@ -110,7 +109,7 @@ class _LinkPadState extends State<LinkPad> {
                             MaterialPageRoute(
                               fullscreenDialog: true,
                               builder: (context) {
-                                return DocumentPage(document: doc, parchment: parchment,);
+                                return DocumentPage(document: doc, parchment: parchment, dataController: widget.dataController);
                               }
                             )
                           );

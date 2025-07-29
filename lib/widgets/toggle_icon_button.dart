@@ -50,6 +50,8 @@ class ToggleIconButton extends StatelessWidget {
               foregroundColor: selected ? colorScheme.onPrimary : colorScheme.onSecondaryContainer,
               disabledBackgroundColor: Colors.transparent,
               disabledForegroundColor: colorScheme.onPrimary,
+              elevation: 3,
+              shadowColor: Colors.black
             ),
           ),
         ),

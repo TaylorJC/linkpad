@@ -1,5 +1,5 @@
 name: linkpad
-description: "A new Flutter project."
+description: "A compact notepad designed around the concept of organizing documents by tags."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -41,6 +41,8 @@ dependencies:
   auto_size_text: ^3.0.0
   spell_check_on_client: ^1.0.0
   filesystem_picker: ^4.1.0
+  google_fonts: ^6.2.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:

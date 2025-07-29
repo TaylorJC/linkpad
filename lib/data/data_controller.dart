@@ -1,11 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import '../widgets/linkpad_appbar.dart' show FilterType;
-import 'datetime_parse.dart';
 
 import 'data_model.dart';
 
@@ -16,18 +14,25 @@ class DataController extends ChangeNotifier {
   final Map<int, Document> _items = <int, Document>{};
   // Settings fields
   late bool _firstTimeStart;
+  // late String _fontName;
   late double _fontSize;
   late ThemeMode _themeMode;
   late Color _themeColor;
   late Directory _saveDirectory;
+  late Duration _autosaveIncrement;
+  late DocumentDisplayType _displayType;
+  
+  bool get firstTimeStart => _firstTimeStart;
+  double get fontSize => _fontSize;
+  ThemeMode get themeMode => _themeMode;
+  Color get themeColor => _themeColor;
+  Directory get saveDirectory => _saveDirectory;
+  Duration get autosaveIncrement => _autosaveIncrement;
+  DocumentDisplayType get displayType => _displayType;
 
   // Call on startup
   Future<void> init() async {
     prefs = await SharedPreferences.getInstance();
-
-    // if (kDebugMode) {
-    //   await prefs.clear();
-    // }
 
     await loadUserSettings();
     loadUserData();
@@ -37,6 +42,10 @@ class DataController extends ChangeNotifier {
     _firstTimeStart = prefs.getBool('firstTimeStart') ?? true;
 
     _fontSize = prefs.getDouble('fontSize') ?? 18.0;
+
+    _displayType = DocumentDisplayType.values.elementAt(prefs.getInt('displayType') ?? 0);
+
+    _autosaveIncrement = Duration(seconds: prefs.getInt('autosaveIncrement') ?? 60);
 
     int? themeMode = prefs.getInt('themeMode');
     _themeMode = themeMode != null ? ThemeMode.values[themeMode] : ThemeMode.system;
@@ -140,12 +149,6 @@ class DataController extends ChangeNotifier {
     return links.toSet().toList(); // Remove duplicates
   }
 
-  bool get firstTimeStart => _firstTimeStart;
-  double get fontSize => _fontSize;
-  ThemeMode get themeMode => _themeMode;
-  Color get themeColor => _themeColor;
-  Directory get saveDirectory => _saveDirectory;
-
   // Methods to update data
   Future<Document> addItemByTitle (String title) async {
     final doc = Document.titled(title);
@@ -202,6 +205,24 @@ class DataController extends ChangeNotifier {
     await prefs.setDouble('fontSize', val);
     notifyListeners();
   }
+
+  Future<void> updateAutosaveIncrement(int val) async {
+    _autosaveIncrement = Duration(seconds: val);
+    await prefs.setInt('autosaveIncrement', val);
+    notifyListeners();
+  }
+
+  Future<void> updateDisplayType(DocumentDisplayType val) async {
+    _displayType = val;
+    await prefs.setInt('displayType', DocumentDisplayType.values.indexOf(val));
+    notifyListeners();
+  }
+
+  // Future<void> updateFontName(String val) async {
+  //   _fontName = val;
+  //   await prefs.setString('fontName', val);
+  //   notifyListeners();
+  // }
 
   Future<void> updateThemeMode(ThemeMode val) async {
     _themeMode = val;

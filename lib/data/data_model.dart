@@ -1,7 +1,16 @@
 import 'dart:convert';
 import 'dart:core';
 
+import 'package:fleather/fleather.dart';
+import 'package:flutter/material.dart';
+import 'package:linkpad/data/data_controller.dart';
+
 import 'datetime_parse.dart';
+
+enum DocumentDisplayType {
+  List,
+  Grid,
+}
 
 class Document {
   // String path;
@@ -42,6 +51,23 @@ class Document {
       dateTimeNowToInt(),
       List<String>.empty(growable: true),
     );
+  }
+
+  Future<bool> saveDocument(TextEditingController titleController, FleatherController editorController, DataController dataController) async {
+    if (titleController.text.trim().isEmpty && editorController.plainTextEditingValue.text.trim().isEmpty) {
+      return false; // Do not save if both title and content are empty
+    }
+
+    title = titleController.text.trim();
+    lastModified = dateTimeNowToInt();
+    await dataController.updateItem(this);
+
+    dataController.saveDocumentToFile(
+      this,
+      jsonEncode(editorController.document.toJson()),
+    );
+
+    return true; // Document saved successfully
   }
 
 }

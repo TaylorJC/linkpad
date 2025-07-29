@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:fleather/fleather.dart' hide kToolbarHeight;
 import 'package:flutter/material.dart';
 import 'package:linkpad/data/data_controller.dart';
+import 'package:linkpad/data/data_model.dart';
 import 'package:linkpad/widgets/document_page.dart';
 import 'package:linkpad/widgets/rotating_icon_button.dart';
+import 'package:linkpad/widgets/toggle_icon_button.dart';
 
 enum FilterType {
   All,
@@ -18,7 +20,7 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   final SearchController titleController = SearchController();
-  FilterType filterType = FilterType.Links;
+  FilterType filterType = FilterType.All;
 
   List<ListTile> _buildSuggestions(BuildContext context, SearchController controller) {
     final dataController = DataProvider.require(context);
@@ -68,7 +70,7 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
             Navigator.of(context).push(
               MaterialPageRoute(
                 fullscreenDialog: true,
-                builder: (context) => DocumentPage(document: suggestions[index], parchment: parchment,),
+                builder: (context) => DocumentPage(document: suggestions[index], parchment: parchment, dataController: dataController,),
               ),
             );
           },
@@ -80,13 +82,13 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // final dataController = DataProvider.require(context);
+    final dataController = DataProvider.require(context);
 
     return AppBar(
       backgroundColor: colorScheme.surfaceContainerHighest,
       centerTitle: true,
       leading: IconButton(
-        icon: Icon(Icons.menu, color: colorScheme.onSurface,),
+        icon: Icon(Icons.menu, color: colorScheme.onSurface, size: 28,),
         onPressed: () {
           Scaffold.of(context).openDrawer();
         },
@@ -129,7 +131,7 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
                   });
                 } else {
                   setState(() {
-                  filterType = FilterType.Titles;
+                  filterType = FilterType.Links;
                   });
                 }
               });
@@ -139,9 +141,6 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
         barElevation: WidgetStatePropertyAll(0),
         shrinkWrap: true,
         searchController: titleController,
-        // onTap: () {
-        //   titleController.openView();
-        // },
         onSubmitted: (value) {
           if (titleController.isOpen) {
             titleController.clear();
@@ -149,7 +148,20 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
           }
         },
         suggestionsBuilder: _buildSuggestions,
-      )
+      ),
+      actions: [
+        ToggleIconButton(
+          icon: Icons.list, 
+          selectedIcon: Icons.grid_on,
+          selected: dataController.displayType == DocumentDisplayType.Grid,
+          onPressed: () {
+          if (dataController.displayType == DocumentDisplayType.Grid) {
+            dataController.updateDisplayType(DocumentDisplayType.List);
+          } else {
+            dataController.updateDisplayType(DocumentDisplayType.Grid);
+          }
+        }),
+      ],
     );
   }
   

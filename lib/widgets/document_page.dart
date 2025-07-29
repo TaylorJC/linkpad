@@ -1,13 +1,11 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:fleather/fleather.dart' hide kToolbarHeight;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:linkpad/data/data_controller.dart';
-import 'package:linkpad/data/datetime_parse.dart';
 import 'package:linkpad/widgets/document_app_bar.dart';
 import 'package:linkpad/widgets/document_drawer.dart';
+import 'package:linkpad/widgets/document_toolbar.dart';
 import 'package:linkpad/widgets/hero_title.dart';
 
 import '../data/data_model.dart';
@@ -17,10 +15,12 @@ class DocumentPage extends StatefulWidget {
     super.key,
     required this.document,
     required this.parchment,
+    required this.dataController,
   });
 
   final Document document;
   final ParchmentDocument parchment;
+  final DataController dataController;
 
   @override
   State<DocumentPage> createState() => _DocumentPageState();
@@ -37,32 +37,18 @@ class _DocumentPageState extends State<DocumentPage> {
 
   final ScrollController scrollController = ScrollController();
 
-  // String readDoc(BuildContext context) {
-  //   final DataController dataController = DataProvider.require(context);
-
-  //   return dataController.loadDocumentFromDoc(widget.document);
-  // }
+  late Timer timer;
 
   @override
   void initState() {
-    // if (widget.document.title != 'Untitled') {
-    //   titleController.text = widget.document.title;
-    // }
-
-    // final doc = readDoc(context);
-
-    // if (doc.isEmpty) {
-    //   editorController = FleatherController(
-    //     document: ParchmentDocument(),
-    //   );
-    // } else {
-    //   // If the document is in JSON format, parse it
-    //   editorController = FleatherController(
-    //     document: ParchmentDocument.fromJson(jsonDecode(doc)),
-    //   );
-    // }
-
     super.initState();
+    
+    timer = Timer.periodic(widget.dataController.autosaveIncrement, (timer) {
+      widget.document.saveDocument(titleController, editorController, widget.dataController);
+      print('Autosaved');
+
+      }
+    );
   }
 
   @override
@@ -71,13 +57,31 @@ class _DocumentPageState extends State<DocumentPage> {
     editorController.dispose();
     editorFocusNode.dispose();
     scrollController.dispose();
+    timer.cancel();
+
 
     super.dispose();
+  }
+
+  void toggleAttribute(ParchmentAttribute attr) {
+    if (editorController.getSelectionStyle().containsSame(attr)) {
+      editorController.formatSelection(attr.unset);
+    } else {
+      editorController.formatSelection(attr);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final DataController dataController = DataProvider.require(context);
+
+    // timer = Timer.periodic(dataController.autosaveIncrement, (timer) {
+    //   widget.document.saveDocument(titleController, editorController, dataController);
+    //   print('Autosaved');
+
+    //   // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Autosaved'),));
+    // });
 
     return FocusTraversalGroup(
       policy: ReadingOrderTraversalPolicy(),
@@ -86,7 +90,13 @@ class _DocumentPageState extends State<DocumentPage> {
           height: MediaQuery.sizeOf(context).height,
           width: MediaQuery.sizeOf(context).width * 0.8,
           child: DocumentDrawer(document: widget.document)),
-        appBar: DocumentAppBar(titleController: titleController, focusNode: editorFocusNode, editorController: editorController, document: widget.document),
+        appBar: DocumentAppBar(
+          titleController: titleController, 
+          focusNode: editorFocusNode, 
+          editorController: editorController, 
+          document: widget.document,
+          dataController: dataController,
+        ),
         backgroundColor: colorScheme.surfaceContainerHighest,
         body: Padding(
           padding: EdgeInsets.only(
@@ -101,14 +111,23 @@ class _DocumentPageState extends State<DocumentPage> {
               Expanded(
                 child: FleatherEditor(
                   autofocus: widget.document.title != '',
-                  spellCheckConfiguration: SpellCheckConfiguration(
-                    spellCheckService: DefaultSpellCheckService(),
-                    misspelledTextStyle: TextStyle(
-                      color: colorScheme.error,
-                      decoration: TextDecoration.underline,
-                      decorationColor: colorScheme.error,
-                    ),
-                  ),
+                  contextMenuBuilder: (context, editorState) {
+                    final List<ContextMenuButtonItem> buttonItems =
+                      editorState.contextMenuButtonItems;
+                    
+                    buttonItems.addAll([
+                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.bold); editorState.hideToolbar(); }, label: 'Bold'),
+                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.italic); editorState.hideToolbar(); }, label: 'Italicize'),
+                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.underline); editorState.hideToolbar(); }, label: 'Underline'),
+                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.strikethrough); editorState.hideToolbar(); }, label: 'Strike-through'),
+                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.inlineCode); editorState.hideToolbar(); }, label: 'Inline-Code'),
+                    ]);
+
+                    return AdaptiveTextSelectionToolbar.buttonItems(
+                      anchors: editorState.contextMenuAnchors,
+                      buttonItems: buttonItems,
+                    );
+                  },
                   padding: EdgeInsetsGeometry.all(12),
                   focusNode: editorFocusNode,
                   controller: editorController,
@@ -116,14 +135,16 @@ class _DocumentPageState extends State<DocumentPage> {
               ),
               Align(
                 alignment: Alignment.bottomCenter,
-                child: Scrollbar(
-                  controller: scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: scrollController,
-                    child: FleatherToolbar.basic(controller:editorController, hideHeadingStyle: true,)),
-                )),
+                child: DocumentToolbar(fleatherController: editorController),
+                // child: Scrollbar(
+                //   controller: scrollController,
+                //   thumbVisibility: true,
+                //   child: SingleChildScrollView(
+                //     scrollDirection: Axis.horizontal,
+                //     controller: scrollController,
+                //     child: FleatherToolbar.basic(controller:editorController, hideHeadingStyle: true,)),
+                // )
+              ),
             ],
           ),
         ),

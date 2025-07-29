@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../data/data_controller.dart';
 import 'custom_card.dart';
 
 class SidedrawerCard extends StatelessWidget {
@@ -14,7 +13,6 @@ class SidedrawerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dataController = DataProvider.require(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     return CustomCard(

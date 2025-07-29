@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:linkpad/data/data_controller.dart';
 import 'package:linkpad/data/datetime_parse.dart';
 import 'package:linkpad/widgets/document_page.dart';
-import 'package:linkpad/widgets/sidedrawer_card.dart';
 
 import '../data/data_model.dart';
 
@@ -99,7 +98,7 @@ class DocumentDrawer extends StatelessWidget {
                   runSpacing: 4,
                   children: document.links.map((link) {
                     return Card(
-                      color: colorScheme.primaryContainer,
+                      color: colorScheme.surfaceContainerHigh,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: ListTile(
@@ -110,15 +109,8 @@ class DocumentDrawer extends StatelessWidget {
                           title: Text(link, 
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: colorScheme.onPrimaryContainer,
+                              color: colorScheme.onSurface,
                               fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize)),
-                          // leading: IconButton(
-                          //   icon: Icon(Icons.close, color: colorScheme.onPrimaryContainer,), 
-                          //   onPressed: () {
-                          //     document.links.remove(link);
-                          //     dataController.updateItem(document);
-                          //   },
-                          // ),
                           subtitle: Column(children:
                             dataController.items.where((element) => element.links.contains(link) && element.id != document.id,).map((doc) {
                               return ListTile(
@@ -130,24 +122,24 @@ class DocumentDrawer extends StatelessWidget {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                leading: Icon(Icons.link, color: colorScheme.onPrimaryContainer),
+                                leading: Icon(Icons.link, color: colorScheme.primary),
                                 title: Text(doc.title, 
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    color: colorScheme.onPrimaryContainer,
+                                    color: colorScheme.onSurface,
                                     fontSize: Theme.of(context).textTheme.labelMedium?.fontSize)
                                 ),
                                 trailing: Text(dateTimeIntToReadableString(doc.lastModified),
                                   textAlign: TextAlign.right,
                                   style: TextStyle(
-                                    color: colorScheme.onPrimaryContainer,
+                                    color: colorScheme.onSurface,
                                     fontSize: Theme.of(context).textTheme.labelSmall?.fontSize,
                                   )
                                 ),
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (context) => DocumentPage(document: doc, parchment: ParchmentDocument.fromJson(jsonDecode(dataController.loadDocumentFromDoc(doc)))),
+                                      builder: (context) => DocumentPage(document: doc, parchment: ParchmentDocument.fromJson(jsonDecode(dataController.loadDocumentFromDoc(doc))), dataController: dataController,),
                                     ),
                                   );
                                   Scaffold.of(context).closeEndDrawer();

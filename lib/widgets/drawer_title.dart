@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../data/data_controller.dart';
 
 enum DrawerTitleButtonSide {
   left,
@@ -19,40 +18,40 @@ class DrawerTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final dataController = DataProvider.require(context);
+    // final dataController = DataProvider.require(context);
 
-    List<Widget> buildRow() {
-      final titleWidget = Text(
-        title,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: colorScheme.onPrimary,
-          fontSize: TextTheme.of(context).titleLarge?.fontSize,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 2,
-        ),
-      );
+    // List<Widget> buildRow() {
+    //   final titleWidget = Text(
+    //     title,
+    //     textAlign: TextAlign.center,
+    //     style: TextStyle(
+    //       color: colorScheme.onPrimary,
+    //       fontSize: TextTheme.of(context).titleLarge?.fontSize,
+    //       fontWeight: FontWeight.w800,
+    //       letterSpacing: 2,
+    //     ),
+    //   );
 
-      final iconWidget = IconButton(
-        onPressed: () => Navigator.of(context).pop(),
-        icon: Icon(Icons.close, color: colorScheme.onPrimary, size: 32),
-        padding: EdgeInsets.zero,
-        alignment: Alignment.center,
-        constraints: BoxConstraints(),
-      );
+    //   // final iconWidget = IconButton(
+    //   //   onPressed: () => Navigator.of(context).pop(),
+    //   //   icon: Icon(Icons.close, color: colorScheme.onPrimary, size: 32),
+    //   //   padding: EdgeInsets.zero,
+    //   //   alignment: Alignment.center,
+    //   //   constraints: BoxConstraints(),
+    //   // );
 
-      if (menuButtonSide == DrawerTitleButtonSide.left) {
-        return [
-          // iconWidget, 
-          titleWidget
-        ];
-      } else {
-        return [
-          titleWidget, 
-          // iconWidget
-        ];
-      }
-    }
+    //   if (menuButtonSide == DrawerTitleButtonSide.left) {
+    //     return [
+    //       // iconWidget, 
+    //       titleWidget
+    //     ];
+    //   } else {
+    //     return [
+    //       titleWidget, 
+    //       // iconWidget
+    //     ];
+    //   }
+    // }
 
     return Container(
       decoration: BoxDecoration(

@@ -1,159 +1,97 @@
-import 'dart:convert';
 import 'package:fleather/fleather.dart' hide kToolbarHeight;
 import 'package:flutter/material.dart';
 import 'package:linkpad/data/data_controller.dart';
 import 'package:linkpad/data/data_model.dart';
-import 'package:linkpad/data/datetime_parse.dart';
 import 'package:linkpad/widgets/rotating_icon_button.dart';
 
 class DocumentAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const DocumentAppBar({
+  DocumentAppBar({
     super.key,
     required this.titleController,
     required this.focusNode,
     required this.editorController,
     required this.document,
+    required this.dataController,
   });
 
   final TextEditingController titleController;
   final FocusNode focusNode;
   final FleatherController editorController;
   final Document document;
+  final DataController dataController;
+  // late Timer autosaveTimer;
 
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
-
-  Future<bool> _saveDocument(BuildContext context) async {
-    final dataController = DataProvider.require(context);
-
-    if (titleController.text.trim().isEmpty && editorController.plainTextEditingValue.text.trim().isEmpty) {
-      return false; // Do not save if both title and content are empty
-    }
-
-    // if (dataController.items.any((item) => item.title == titleController.text.trim() && item.id != document.id)) {
-    //   // If a document with the same title already exists, show an error
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text('A document with this title already exists.'),
-    //       backgroundColor: Theme.of(context).colorScheme.error,
-    //     ),
-    //   );
-    //   return false; // Do not save if title already exists
-    // }
-
-    // if (document.title != titleController.text) {
-    //   await dataController.removeItem(document);
-    //   document.title = titleController.text.trim();
-    // }
-
-    document.title = titleController.text.trim();
-    document.lastModified = dateTimeNowToInt();
-    await dataController.updateItem(document);
-
-    dataController.saveDocumentToFile(
-      document,
-      jsonEncode(editorController.document.toJson()),
-    );
-
-    return true; // Document saved successfully
-  }
 
   @override
   Widget build(BuildContext context) {
     final DataController dataController = DataProvider.require(context);
     final colorScheme = Theme.of(context).colorScheme;
 
+    // autosaveTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
+    //   await _saveDocument();
+
+    //   if (kDebugMode) {
+    //     ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(content: Text('Autosave Complete'), actions: [TextButton(onPressed: () {ScaffoldMessenger.of(context).clearMaterialBanners();}, child: Text('OK'))]));
+    //   }
+    // });
+
     return AppBar(
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary, size: 32,),
         onPressed: () async {
-          await _saveDocument(context).whenComplete(() {
-            Navigator.of(context).pop();
-          });
+
+          var didSave = await document.saveDocument(titleController, editorController, dataController);
+
+          if (!didSave) {
+            dataController.removeItem(document);
+          }
+
+          Navigator.of(context).pop();
         },
       ),
       actions: [
-        // IconButton(
-        //   icon: Icon(Icons.undo, color: colorScheme.onPrimary, size: 32,),
-        //   onPressed: editorController.canUndo ? () {
-        //     editorController.undo();
-        //   } : null,
-        // ),
-        // IconButton(
-        //   icon: Icon(Icons.redo, color: colorScheme.onPrimary, size: 32,),
-        //   onPressed: editorController.canRedo ? () {
-        //     editorController.redo();
-        //   } : null,
-        // ),
-        // RotatingIconButton(
-        //   icon: Icons.format_bold,
-        //   onPressed: () {
-        //     editorController.formatSelection(ParchmentAttribute.bold);
-        //   },
-        // ),
-        // RotatingIconButton(
-        //   icon: Icons.format_italic,
-        //   onPressed: () {
-        //     editorController.formatSelection(ParchmentAttribute.italic);
-        //   },
-        // ),
-        // PopupMenuButton(
-        //   icon: Icon(Icons.menu_outlined, color: colorScheme.onPrimary),
-        //   itemBuilder: (context) {
-        //   return [
-        //     PopupMenuItem(
-        //       value: ParchmentAttribute.bold,
-        //       child: Text('Bold'),
-        //     ),
-        //     PopupMenuItem(
-        //       value: ParchmentAttribute.italic,
-        //       child: Text('Italic'),
-        //     ),
-        //     PopupMenuItem(
-        //       value: ParchmentAttribute.underline,
-        //       child: Text('Underline'),
-        //     ),
-        //     PopupMenuItem(
-        //       value: ParchmentAttribute.strikethrough,
-        //       child: Text('Strikethrough'),
-        //     ),
-            
-        //   ];
-        // }, onSelected: (value) {
-        //   editorController.formatSelection(value);
-        // }),
-        // RotatingIconButton(
-        //   icon: Icons.format_align_center,
-        //   onPressed: () {
-        //     editorController.formatSelection(ParchmentAttribute.center);
-        //   },
-        // ),
-        // RotatingIconButton(
-        //   icon: Icons.save,
-        //   onPressed: () async {
-        //     var saved = await _saveDocument(context);
+        RotatingIconButton(
+          icon: Icons.undo,
+          direction: TurnDirection.counterClockwise,
+          onPressed: () {
+            editorController.undo();
+          },
+        ),
+        RotatingIconButton(
+          icon: Icons.redo,
+          onPressed: () {
+            editorController.redo();
+          },
+        ),
+        RotatingIconButton(
+          icon: Icons.save,
+          onPressed: () async {
+            var saved = await document.saveDocument(titleController, editorController, dataController);
 
-        //     if (saved) {
-        //       ScaffoldMessenger.of(context).showSnackBar(
-        //         SnackBar(
-        //           backgroundColor: colorScheme.primary,
-        //           content: Text(
-        //             '"${document.title}" saved',
-        //             style: TextStyle(
-        //               color: colorScheme.onPrimary,
-        //               fontSize: TextTheme.of(context).titleMedium?.fontSize,
-        //             ),
-        //           ),
-        //           duration: Duration(seconds: 1),
-        //         ),
-        //       );
-        //     }
-        //   },
-        // ),
+            if (saved) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: colorScheme.primary,
+                  content: Text(
+                    '"${document.title}" saved',
+                    style: TextStyle(
+                      color: colorScheme.onPrimary,
+                      fontSize: TextTheme.of(context).titleMedium?.fontSize,
+                    ),
+                  ),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            }
+          },
+        ),
+        SizedBox(width: 20,),
         RotatingIconButton(
           icon: Icons.link,
-          onPressed: () {
-            _saveDocument(context);
+          onPressed: () async {
+            await document.saveDocument(titleController, editorController, dataController);
 
             Scaffold.of(context).openEndDrawer();
           },

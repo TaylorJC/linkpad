@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:linkpad/data/data_controller.dart';
 import 'package:linkpad/data/data_model.dart';
 
 class HeroTitle extends StatelessWidget {
