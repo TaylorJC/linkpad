@@ -27,7 +27,9 @@ class DocumentDisplay extends StatelessWidget {
 
     for (var doc in docs) {
       final String docContent = dataController.loadDocumentFromDoc(doc);
-      final width = MediaQuery.sizeOf(context).width - (crossAxisCount * 8 + 24) / crossAxisCount;
+      final width =
+          MediaQuery.sizeOf(context).width -
+          (crossAxisCount * 8 + 24) / crossAxisCount;
 
       ParchmentDocument parchment;
 
@@ -44,30 +46,39 @@ class DocumentDisplay extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   fullscreenDialog: true,
-                  builder: (context) => DocumentPage(document: doc, parchment: parchment, dataController: dataController,),
+                  builder: (context) => DocumentPage(
+                    document: doc,
+                    parchment: parchment,
+                    dataController: dataController,
+                  ),
                 ),
               );
             },
             onLongPress: () {
-              showDialog(context: context, builder: (context) {
-                return AlertDialog(
-                  title: Text('Delete Document'),
-                  content: Text('Are you sure you want to delete ${doc.title}?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () async {
-                        await dataController.removeItem(doc);
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('Delete'),
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text('Delete Document'),
+                    content: Text(
+                      'Are you sure you want to delete ${doc.title}?',
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Cancel'),
-                    ),
-                  ],
-                );
-              });
+                    actions: [
+                      TextButton(
+                        onPressed: () async {
+                          await dataController.removeItem(doc);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Delete'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Cancel'),
+                      ),
+                    ],
+                  );
+                },
+              );
             },
             borderRadius: BorderRadius.circular(8),
             child: GridTile(
@@ -76,25 +87,30 @@ class DocumentDisplay extends StatelessWidget {
                 child: Flex(
                   direction: Axis.vertical,
                   // backgroundColor: colorScheme.primaryContainer,
-                  children: [AutoSizeText(doc.title, 
-                  maxLines: 2,
-                  maxFontSize: TextTheme.of(context).titleLarge?.fontSize ?? 20,
-                  textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w700,
+                  children: [
+                    AutoSizeText(
+                      doc.title,
+                      maxLines: 2,
+                      maxFontSize:
+                          TextTheme.of(context).titleLarge?.fontSize ?? 20,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  AutoSizeText(dateTimeIntToReadableString(doc.lastModified), 
-                  textAlign: TextAlign.center,
-                  softWrap: true,
-                  maxLines: 2,
-                    style: TextStyle(
-                      color: colorScheme.onPrimaryContainer, 
-                      fontSize: TextTheme.of(context).labelSmall?.fontSize, 
-                      fontWeight: FontWeight.w400,
+                    AutoSizeText(
+                      dateTimeIntToReadableString(doc.lastModified),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      maxLines: 2,
+                      style: TextStyle(
+                        color: colorScheme.onPrimaryContainer,
+                        fontSize: TextTheme.of(context).labelSmall?.fontSize,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),],
+                  ],
                 ),
               ),
               child: Container(
@@ -125,7 +141,7 @@ class DocumentDisplay extends StatelessWidget {
                 ),
               ),
             ),
-          )
+          ),
         );
       } else {
         tiles.add(
@@ -145,7 +161,11 @@ class DocumentDisplay extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   fullscreenDialog: true,
-                  builder: (context) => DocumentPage(document: doc, parchment: parchment, dataController: dataController,),
+                  builder: (context) => DocumentPage(
+                    document: doc,
+                    parchment: parchment,
+                    dataController: dataController,
+                  ),
                 ),
               );
             },
@@ -155,7 +175,7 @@ class DocumentDisplay extends StatelessWidget {
     }
 
     return tiles;
-  } 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,43 +185,48 @@ class DocumentDisplay extends StatelessWidget {
       padding: const EdgeInsets.all(12.0),
       child: dataController.items.isEmpty
           ? Stack(
-            children: [
-              Center(
-                child: Opacity(
-                  opacity: 0.2,
-                  child: Image.asset('assets/pages_holed.png',
-                    color: Theme.of(context).colorScheme.primary.withAlpha(200),
-                    fit: BoxFit.cover,
-                    colorBlendMode: BlendMode.modulate,
-                    width: 500,
-                    height: 500,
+              children: [
+                Center(
+                  child: Opacity(
+                    opacity: 0.2,
+                    child: Image.asset(
+                      'assets/pages_holed.png',
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(200),
+                      fit: BoxFit.cover,
+                      colorBlendMode: BlendMode.modulate,
+                      width: MediaQuery.sizeOf(context).width,
+                      height: MediaQuery.sizeOf(context).width,
+                    ),
                   ),
                 ),
-              ),
-              Center(
-                child: Text(
-                  'No documents found.',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary.withAlpha(120),
-                    fontSize: TextTheme.of(context).titleLarge?.fontSize,
+                Center(
+                  child: Text(
+                    'No documents found.',
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(120),
+                      fontSize: TextTheme.of(context).titleLarge?.fontSize,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          )
+              ],
+            )
           : (displayType == DocumentDisplayType.List
-              ? ListView.builder(
-                  itemCount: dataController.items.length,
-                  itemBuilder: (context, index) {
-                    return getDocTiles(dataController.items, context)[index];
-                  },
-                )
-              : GridView.count(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  children: getDocTiles(dataController.items, context),
-                )),
+                ? ListView.builder(
+                    itemCount: dataController.items.length,
+                    itemBuilder: (context, index) {
+                      return getDocTiles(dataController.items, context)[index];
+                    },
+                  )
+                : GridView.count(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    children: getDocTiles(dataController.items, context),
+                  )),
     );
   }
 }
