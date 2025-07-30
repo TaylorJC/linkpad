@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
@@ -7,14 +9,22 @@ import '../widgets/linkpad_appbar.dart' show FilterType;
 
 import 'data_model.dart';
 
+enum ExportType {
+  plainText,
+  json,
+  markDown,
+  html,
+}
+
 // Data Controller class that manages your application state
 class DataController extends ChangeNotifier {
   late SharedPreferences prefs;
+
   // Data fields
   final Map<int, Document> _items = <int, Document>{};
+  
   // Settings fields
   late bool _firstTimeStart;
-  // late String _fontName;
   late double _fontSize;
   late ThemeMode _themeMode;
   late Color _themeColor;
@@ -129,11 +139,11 @@ class DataController extends ChangeNotifier {
     if (query.isEmpty) return items;
 
     switch (filterType) {
-      case FilterType.Titles:
+      case FilterType.titles:
         return items.where((doc) => doc.title.toLowerCase().contains(query.toLowerCase())).toSet().toList();
-      case FilterType.Links:
+      case FilterType.links:
         return items.where((doc) => doc.links.any((link) => link.toLowerCase().contains(query.toLowerCase()))).toSet().toList();
-      case FilterType.All:
+      case FilterType.all:
         return items.where((doc) => doc.title.toLowerCase().contains(query.toLowerCase()) || 
                                     doc.links.any((link) => link.toLowerCase().contains(query.toLowerCase()))).toSet().toList();
     }
@@ -147,6 +157,42 @@ class DataController extends ChangeNotifier {
     }
 
     return links.toSet().toList(); // Remove duplicates
+  }
+
+  Future<String> export(Document doc, ExportType exportType) async {
+    final docJson = File(filePath(doc)).readAsStringSync();
+    final parchment = ParchmentDocument.fromJson(jsonDecode(docJson));
+
+    final saveDir = await getDownloadsDirectory();
+
+    if (saveDir != null && !saveDir.existsSync()) {
+      saveDir.createSync(recursive: true);
+    }
+
+    var savePath = "${saveDir!.path}${Platform.pathSeparator}${doc.title}";
+    File saveFile;
+
+    switch (exportType) {
+      case ExportType.plainText:
+        saveFile = File("$savePath.txt");
+        saveFile.writeAsStringSync(parchment.toPlainText());
+        break;
+      case ExportType.markDown:
+        saveFile = File("$savePath.md");
+        saveFile.writeAsStringSync(parchment.toPlainText());
+        break;
+      case ExportType.json:
+        saveFile = File("$savePath.json");
+        if (saveFile.existsSync()) {
+          saveFile.deleteSync();
+        }
+        for (var line in parchment.toJson()) {
+          saveFile.writeAsStringSync(line.toString().replaceAll('\n', Platform.lineTerminator), mode: FileMode.append);
+        }
+      default:
+    }
+
+    return savePath;
   }
 
   // Methods to update data

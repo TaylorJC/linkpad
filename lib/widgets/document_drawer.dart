@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:linkpad/data/data_controller.dart';
 import 'package:linkpad/data/datetime_parse.dart';
 import 'package:linkpad/widgets/document_page.dart';
@@ -96,7 +97,15 @@ class DocumentDrawer extends StatelessWidget {
                 Wrap(
                   spacing: 4,
                   runSpacing: 4,
-                  children: document.links.map((link) {
+                  children: AnimateList(
+                    interval: Durations.short4,
+                    effects: [
+                      FadeEffect(),
+                      SlideEffect(
+                        begin: Offset(1, 0),
+                      )
+                    ],
+                    children: document.links.map((link) {
                     return Card(
                       color: colorScheme.surfaceContainerHigh,
                       child: Padding(
@@ -113,37 +122,40 @@ class DocumentDrawer extends StatelessWidget {
                               fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize)),
                           subtitle: Column(children:
                             dataController.items.where((element) => element.links.contains(link) && element.id != document.id,).map((doc) {
-                              return ListTile(
-                                minVerticalPadding: 0,
-                                contentPadding: EdgeInsets.zero,
-                                isThreeLine: false,
-                                dense: true,
-                                visualDensity: VisualDensity.compact,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                leading: Icon(Icons.link, color: colorScheme.primary),
-                                title: Text(doc.title, 
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    color: colorScheme.onSurface,
-                                    fontSize: Theme.of(context).textTheme.labelMedium?.fontSize)
-                                ),
-                                trailing: Text(dateTimeIntToReadableString(doc.lastModified),
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    color: colorScheme.onSurface,
-                                    fontSize: Theme.of(context).textTheme.labelSmall?.fontSize,
-                                  )
-                                ),
+                              return InkWell(
+                                borderRadius: BorderRadius.circular(16),
                                 onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => DocumentPage(document: doc, parchment: ParchmentDocument.fromJson(jsonDecode(dataController.loadDocumentFromDoc(doc))), dataController: dataController,),
-                                    ),
-                                  );
-                                  Scaffold.of(context).closeEndDrawer();
-                                },
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => DocumentPage(document: doc, parchment: ParchmentDocument.fromJson(jsonDecode(dataController.loadDocumentFromDoc(doc))), dataController: dataController,),
+                                      ),
+                                    );
+                                    Scaffold.of(context).closeEndDrawer();
+                                  },
+                                child: ListTile(
+                                  minVerticalPadding: 0,
+                                  // contentPadding: EdgeInsets.zero,
+                                  isThreeLine: false,
+                                  dense: true,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  leading: Icon(Icons.link, color: colorScheme.primary),
+                                  title: Text(doc.title, 
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: Theme.of(context).textTheme.labelMedium?.fontSize)
+                                  ),
+                                  trailing: Text(dateTimeIntToReadableString(doc.lastModified),
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: Theme.of(context).textTheme.labelSmall?.fontSize,
+                                    )
+                                  ),
+                                ),
                               );
                             }).toList(),
                           ),
@@ -151,6 +163,7 @@ class DocumentDrawer extends StatelessWidget {
                       ),
                     );
                   }).toList(),
+                  ),
                 ),
               ]
             ),

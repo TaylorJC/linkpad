@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fleather/fleather.dart' hide kToolbarHeight;
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:linkpad/data/data_controller.dart';
 import 'package:linkpad/widgets/document_app_bar.dart';
 import 'package:linkpad/widgets/document_drawer.dart';
@@ -11,7 +12,7 @@ import 'package:linkpad/widgets/hero_title.dart';
 import '../data/data_model.dart';
 
 class DocumentPage extends StatefulWidget {
-  DocumentPage({
+  const DocumentPage({
     super.key,
     required this.document,
     required this.parchment,
@@ -43,16 +44,20 @@ class _DocumentPageState extends State<DocumentPage> {
   void initState() {
     super.initState();
     
-    timer = Timer.periodic(widget.dataController.autosaveIncrement, (timer) {
-      widget.document.saveDocument(titleController, editorController, widget.dataController);
-      print('Autosaved');
-
+    timer = Timer.periodic(
+      widget.dataController.autosaveIncrement, 
+      (timer) {
+        widget.document.saveDocument(titleController, editorController, widget.dataController);
       }
     );
   }
 
   @override
   void dispose() {
+    if (titleController.text.trim().isEmpty && editorController.plainTextEditingValue.text.trim().isEmpty) {
+      widget.dataController.removeItem(widget.document);
+    }
+
     titleController.dispose();
     editorController.dispose();
     editorFocusNode.dispose();
@@ -107,7 +112,6 @@ class _DocumentPageState extends State<DocumentPage> {
           child: Column(
             children: [
               HeroTitle(document: widget.document, focusNode: editorFocusNode, titleController: titleController),
-              
               Expanded(
                 child: FleatherEditor(
                   autofocus: widget.document.title != '',
@@ -136,16 +140,14 @@ class _DocumentPageState extends State<DocumentPage> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: DocumentToolbar(fleatherController: editorController),
-                // child: Scrollbar(
-                //   controller: scrollController,
-                //   thumbVisibility: true,
-                //   child: SingleChildScrollView(
-                //     scrollDirection: Axis.horizontal,
-                //     controller: scrollController,
-                //     child: FleatherToolbar.basic(controller:editorController, hideHeadingStyle: true,)),
-                // )
-              ),
-            ],
+              ).animate(
+                effects: [
+                  SlideEffect(
+                    begin: Offset(0, 1)
+                  )
+                ]
+              )
+            ]
           ),
         ),
       ),

@@ -19,31 +19,40 @@ class HeroTitle extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: TextField(
-          controller: titleController,
-          autofocus: true,
-          maxLines: 1,
-          textAlign: TextAlign.center,
-          cursorColor: colorScheme.onSurface,
-          textCapitalization: TextCapitalization.words,
-          onSubmitted: (_) {
-            focusNode.requestFocus();
-          },
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: colorScheme.onSurface)),
-            hintText: 'Title',
-            hintStyle: TextStyle(
-              color: colorScheme.onSurface.withAlpha(150),
-              fontStyle: FontStyle.italic,
-              fontSize: TextTheme.of(context).titleLarge?.fontSize,
-            )
-          ),
-          style: TextStyle(
-            fontSize: TextTheme.of(context).titleLarge?.fontSize,
-            color: colorScheme.onSurface,
-          ),
+      child: Hero(
+        tag: 'textField',
+        child: Card(
+          color: colorScheme.surfaceContainer,
+          child: TextField(
+              controller: titleController,
+              autofocus: true,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              cursorColor: colorScheme.onSurface,
+              textCapitalization: TextCapitalization.words,
+              onSubmitted: (_) {
+                focusNode.requestFocus();
+              },
+              decoration: InputDecoration(
+                border: InputBorder.none,
+
+                // focusedBorder: OutlineInputBorder(
+                //   borderRadius: BorderRadius.circular(16),
+                //   borderSide: BorderSide(color: colorScheme.onSurface)),
+                hintText: 'Title',
+                hintStyle: TextStyle(
+                  color: colorScheme.onSurface.withAlpha(150),
+                  fontStyle: FontStyle.italic,
+                  fontSize: TextTheme.of(context).titleLarge?.fontSize,
+                )
+              ),
+              style: TextStyle(
+                fontSize: TextTheme.of(context).titleLarge?.fontSize,
+                color: colorScheme.onSurface,
+              ),
+            ),
         ),
+      ),
     );
   }
 }

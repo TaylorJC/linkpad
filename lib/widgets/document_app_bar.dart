@@ -29,19 +29,10 @@ class DocumentAppBar extends StatelessWidget implements PreferredSizeWidget {
     final DataController dataController = DataProvider.require(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // autosaveTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
-    //   await _saveDocument();
-
-    //   if (kDebugMode) {
-    //     ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(content: Text('Autosave Complete'), actions: [TextButton(onPressed: () {ScaffoldMessenger.of(context).clearMaterialBanners();}, child: Text('OK'))]));
-    //   }
-    // });
-
     return AppBar(
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary, size: 32,),
         onPressed: () async {
-
           var didSave = await document.saveDocument(titleController, editorController, dataController);
 
           if (!didSave) {
@@ -86,6 +77,67 @@ class DocumentAppBar extends StatelessWidget implements PreferredSizeWidget {
               );
             }
           },
+        ),
+        MenuBar(
+          style: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+            elevation: WidgetStatePropertyAll(0),
+            padding: WidgetStatePropertyAll(EdgeInsets.zero),
+            shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(50)))
+          ),
+          children: [
+            SubmenuButton(
+              style: ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+                foregroundColor: WidgetStatePropertyAll(colorScheme.onPrimary),
+                padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                elevation: WidgetStatePropertyAll(0),
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(50)))
+              ),
+              menuChildren: [
+              MenuItemButton(
+                child: Text('Export as Plaintext'),
+                onPressed: () async {
+                  final savePath = await dataController.export(document, ExportType.plainText);
+
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    backgroundColor: colorScheme.primary,
+                    content: Text(
+                      'Saved to "$savePath"',
+                      style: TextStyle(
+                        color: colorScheme.onPrimary
+                      ),
+                    ),
+                  ));
+                },
+              ),
+              MenuItemButton(
+                child: Text('Export as JSON'),
+                onPressed: () async {
+                  final savePath = await dataController.export(document, ExportType.json);
+
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    backgroundColor: colorScheme.primary,
+                    content: Text(
+                      'Saved to "$savePath"',
+                      style: TextStyle(
+                        color: colorScheme.onPrimary
+                      ),
+                    ),
+                  ));
+                },
+              ),
+              // MenuItemButton(
+              //   child: Text('Export as MarkDown'),
+              //   onPressed: () {
+              //     dataController.export(document, ExportType.markDown);
+              //   },
+              // ),
+            ], child: Icon(Icons.more_vert,
+              color: colorScheme.onPrimary,
+            )
+            ),
+            ],
         ),
         SizedBox(width: 20,),
         RotatingIconButton(

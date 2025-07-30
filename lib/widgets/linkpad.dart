@@ -1,6 +1,7 @@
 import 'package:fleather/fleather.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:linkpad/data/data_model.dart';
 import 'package:linkpad/widgets/linkpad_appbar.dart';
 
@@ -28,7 +29,7 @@ class _LinkPadState extends State<LinkPad> {
   final ScrollController _scrollController = ScrollController();
   bool _extendFAB = true;
 
-  DocumentDisplayType documentDisplayType = DocumentDisplayType.Grid;
+  DocumentDisplayType documentDisplayType = DocumentDisplayType.grid;
 
   @override
   void initState() {
@@ -65,7 +66,7 @@ class _LinkPadState extends State<LinkPad> {
               theme: ThemeData.from(
                 colorScheme: SeedColorScheme.fromSeeds(
                   brightness: Brightness.light, 
-                  tones: FlexTones.vivid(Brightness.light), 
+                  tones: FlexTones.candyPop(Brightness.light), 
                   primaryKey: widget.dataController.themeColor,
                   error: Colors.red,
                 ),
@@ -92,11 +93,16 @@ class _LinkPadState extends State<LinkPad> {
                         child: SettingsDrawer()), // Left drawer for tags and filters// Right drawer for settings
                       appBar: LinkpadAppbar(),
                       body: Padding(
-                        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom, top: MediaQuery.viewPaddingOf(context).top), 
-                        child:  DocumentDisplay(displayType: widget.dataController.displayType, crossAxisCount: MediaQuery.sizeOf(context).width ~/ 200,), // List of all documents
+                        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom, 
+                        // top: MediaQuery.viewPaddingOf(context).top
+                      ), 
+                        child:  DocumentDisplay(
+                          scrollController: _scrollController,
+                          displayType: widget.dataController.displayType, 
+                          crossAxisCount: MediaQuery.sizeOf(context).width ~/ 200,
+                        ), // List of all documents
                       ),
                       floatingActionButton: FloatingActionButton.extended(
-                        heroTag: 'New Document',
                         extendedIconLabelSpacing: _extendFAB ? 10 : 0,
                         extendedPadding: _extendFAB ? null : const EdgeInsets.all(16),
                         onPressed: () async {
@@ -122,7 +128,7 @@ class _LinkPadState extends State<LinkPad> {
                         ),
                         icon: const Icon(Icons.add),
                       ) // Quick add new to-dos
-                    ),
+                    )
                   );
                 }
               ),

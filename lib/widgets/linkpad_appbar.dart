@@ -9,9 +9,9 @@ import 'package:linkpad/widgets/rotating_icon_button.dart';
 import 'package:linkpad/widgets/toggle_icon_button.dart';
 
 enum FilterType {
-  All,
-  Titles,
-  Links,
+  all,
+  titles,
+  links,
 }
 
 class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
@@ -20,7 +20,7 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   final SearchController titleController = SearchController();
-  FilterType filterType = FilterType.All;
+  FilterType filterType = FilterType.all;
 
   List<ListTile> _buildSuggestions(BuildContext context, SearchController controller) {
     final dataController = DataProvider.require(context);
@@ -86,6 +86,7 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       backgroundColor: colorScheme.surfaceContainerHighest,
+      scrolledUnderElevation: 0,
       centerTitle: true,
       leading: IconButton(
         icon: Icon(Icons.menu, color: colorScheme.onSurface, size: 28,),
@@ -93,72 +94,75 @@ class LinkpadAppbar extends StatelessWidget implements PreferredSizeWidget {
           Scaffold.of(context).openDrawer();
         },
       ),
-      title: SearchAnchor.bar(
-        barHintText: 'Linkpad',
-        barHintStyle: WidgetStatePropertyAll(
-          TextStyle(
-            color: colorScheme.onSurface.withAlpha(150),
-            fontStyle: FontStyle.italic,
-            fontSize: TextTheme.of(context).titleLarge?.fontSize,
+      title: Hero(
+        tag: 'textField',
+        child: SearchAnchor.bar(
+          barHintText: 'Linkpad',
+          barHintStyle: WidgetStatePropertyAll(
+            TextStyle(
+              color: colorScheme.onSurface.withAlpha(150),
+              fontStyle: FontStyle.italic,
+              fontSize: TextTheme.of(context).titleLarge?.fontSize,
+            ),
           ),
-        ),
-        viewTrailing: [
-          StatefulBuilder(
-            builder: (context, setState) {
-                IconData trailingIcon;
-
-                switch (filterType) {
-                  case FilterType.All:
-                    trailingIcon = Icons.article;
-                    break;
-                  case FilterType.Titles:
-                    trailingIcon = Icons.title;
-                    break;
-                  case FilterType.Links:
-                    trailingIcon = Icons.link;
-                    break;
-                }
-              
-              return RotatingIconButton(icon: trailingIcon, onPressed: () {
-                // Toggle filter type
-                if (filterType == FilterType.Titles) {
-                  setState(() {
-                    filterType = FilterType.Links;
-                  });
-                } else if (filterType == FilterType.Links) {
-                  setState(() {
-                  filterType = FilterType.All;
-                  });
-                } else {
-                  setState(() {
-                  filterType = FilterType.Links;
-                  });
-                }
-              });
+          viewTrailing: [
+            StatefulBuilder(
+              builder: (context, setState) {
+                  IconData trailingIcon;
+        
+                  switch (filterType) {
+                    case FilterType.all:
+                      trailingIcon = Icons.article;
+                      break;
+                    case FilterType.titles:
+                      trailingIcon = Icons.title;
+                      break;
+                    case FilterType.links:
+                      trailingIcon = Icons.link;
+                      break;
+                  }
+                
+                return RotatingIconButton(icon: trailingIcon, onPressed: () {
+                  // Toggle filter type
+                  if (filterType == FilterType.titles) {
+                    setState(() {
+                      filterType = FilterType.links;
+                    });
+                  } else if (filterType == FilterType.links) {
+                    setState(() {
+                    filterType = FilterType.all;
+                    });
+                  } else {
+                    setState(() {
+                    filterType = FilterType.links;
+                    });
+                  }
+                });
+              }
+            ),
+          ],
+          barElevation: WidgetStatePropertyAll(0),
+          shrinkWrap: true,
+          searchController: titleController,
+          onSubmitted: (value) {
+            if (titleController.isOpen) {
+              titleController.clear();
+              titleController.closeView(value);
             }
-          ),
-        ],
-        barElevation: WidgetStatePropertyAll(0),
-        shrinkWrap: true,
-        searchController: titleController,
-        onSubmitted: (value) {
-          if (titleController.isOpen) {
-            titleController.clear();
-            titleController.closeView(value);
-          }
-        },
-        suggestionsBuilder: _buildSuggestions,
+          },
+          suggestionsBuilder: _buildSuggestions,
+        ),
       ),
       actions: [
         ToggleIconButton(
           icon: Icons.list, 
           selectedIcon: Icons.grid_on,
-          selected: dataController.displayType == DocumentDisplayType.Grid,
+          selected: dataController.displayType == DocumentDisplayType.grid,
           onPressed: () {
-          if (dataController.displayType == DocumentDisplayType.Grid) {
-            dataController.updateDisplayType(DocumentDisplayType.List);
+          if (dataController.displayType == DocumentDisplayType.grid) {
+            dataController.updateDisplayType(DocumentDisplayType.list);
           } else {
-            dataController.updateDisplayType(DocumentDisplayType.Grid);
+            dataController.updateDisplayType(DocumentDisplayType.grid);
           }
         }),
       ],

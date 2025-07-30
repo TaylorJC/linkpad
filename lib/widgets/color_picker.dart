@@ -46,12 +46,13 @@ class _ColorPickerState extends State<ColorPicker> {
                 },
                 elevation: 4,
                 hoverElevation: 10,
-                hoverColor: colorChoices[index].withAlpha(10),
+                
+                // hoverColor: colorChoices[index].withAlpha(250),
                 color: colorChoices[index],
                 minWidth: iconWidth,
                 height: 50,
                 shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                child: dataController.themeColor == colorChoices[index] ? Icon(Icons.check) : null,
+                child: dataController.themeColor == colorChoices[index] ? Icon(Icons.check, color: colorChoices[index].computeLuminance() < 0.5 ? Colors.white : Colors.black) : null,
               ),
             );
           }),

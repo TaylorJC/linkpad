@@ -121,96 +121,145 @@ class SettingsDrawer extends StatelessWidget {
                     child: SingleChildScrollView(child: ColorPicker()),
                   ),
                 ),
-                               SidedrawerCard(
+                SidedrawerCard(
                   title: 'Save Directory:',
                   child: StatefulBuilder(
                     builder: (context, setState) {
-                      return ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: 200,
-                          maxWidth: 300,
-                        ),
-                        child: TextField(
-                          controller: TextEditingController(text: dataController.saveDirectory.path),
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            suffixIcon: Icon(Icons.folder_open, color: colorScheme.onSecondaryContainer),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                      return InkWell(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxHeight: 200,
+                            maxWidth: 300,
                           ),
-                          onTap: () async {
-                            var docDir = await getApplicationDocumentsDirectory();
-                        
-                            var newDir = await FilesystemPicker.open(
-                              context: context,
-                              rootDirectory: docDir,
-                              directory: dataController.saveDirectory,
-                              title: 'Select Save Directory',
-                              fsType: FilesystemType.folder,
-                              pickText: 'Select',
-                              contextActions: [
-                                FilesystemPickerContextAction(
-                                  text: 'Create New Folder',
-                                  icon: Icon(Icons.create_new_folder),
-                                  action: (context, directory) async {
-                                    var newFolder = await showDialog<String>(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: Text('New Folder Name'),
-                                          content: TextField(
-                                            autofocus: true,
-                                            decoration: InputDecoration(hintText: 'Enter folder name'),
-                                            onSubmitted: Navigator.of(context).pop,
-                                          ),
-                                        );
-                                      },
-                                    );
-                        
-                                    if (newFolder != null && newFolder.isNotEmpty) {
-                                      var newDirectory = Directory('${directory.path}/$newFolder');
-                                      await newDirectory.create();
-                                      return true;
-                                    }
-                        
-                                    return false;
-                                  },
-                                ),
-                              ],
-                              theme: FilesystemPickerTheme(
-                                backgroundColor: colorScheme.surfaceContainer,
-                                topBar: FilesystemPickerTopBarThemeData(
-                                  backgroundColor: colorScheme.primaryContainer,
-                                ),
-                                pickerAction: FilesystemPickerActionThemeData(
-                                  location: FilesystemPickerActionLocation.floatingCenter,
-                                  backgroundColor: colorScheme.primaryContainer,
-                                  textStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+                          child: TextField(
+                            controller: TextEditingController(text: dataController.saveDirectory.path),
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              suffixIcon: Icon(Icons.folder_open, color: colorScheme.onSecondaryContainer),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onTap: () async {
+                              var docDir = await getApplicationDocumentsDirectory();
+                          
+                              var newDir = await FilesystemPicker.open(
+                                context: context,
+                                rootDirectory: docDir,
+                                directory: dataController.saveDirectory,
+                                title: 'Select Save Directory',
+                                fsType: FilesystemType.folder,
+                                pickText: 'Select',
+                                contextActions: [
+                                  FilesystemPickerContextAction(
+                                    text: 'Create New Folder',
+                                    icon: Icon(Icons.create_new_folder),
+                                    action: (context, directory) async {
+                                      var newFolder = await showDialog<String>(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text('New Folder Name'),
+                                            content: TextField(
+                                              autofocus: true,
+                                              decoration: InputDecoration(hintText: 'Enter folder name'),
+                                              onSubmitted: Navigator.of(context).pop,
+                                            ),
+                                          );
+                                        },
+                                      );
+                          
+                                      if (newFolder != null && newFolder.isNotEmpty) {
+                                        var newDirectory = Directory('${directory.path}/$newFolder');
+                                        await newDirectory.create();
+                                        return true;
+                                      }
+                          
+                                      return false;
+                                    },
+                                  ),
+                                ],
+                                theme: FilesystemPickerTheme(
+                                  backgroundColor: colorScheme.surfaceContainer,
+                                  topBar: FilesystemPickerTopBarThemeData(
+                                    backgroundColor: colorScheme.primaryContainer,
+                                  ),
+                                  pickerAction: FilesystemPickerActionThemeData(
+                                    location: FilesystemPickerActionLocation.floatingCenter,
+                                    backgroundColor: colorScheme.primaryContainer,
+                                    textStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+                                  )
                                 )
-                              )
-                            );
-                        
-                            if (newDir != null) {
-                              dataController.updateSaveDirectory(newDir);
-                            }
-                          },
+                              );
+                          
+                              if (newDir != null) {
+                                dataController.updateSaveDirectory(newDir);
+                              }
+                            },
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
-                SidedrawerCard(title: 'Autosave Interval:', child: DropdownButton<int>(
-                  borderRadius: BorderRadius.circular(8),
-                  padding: EdgeInsets.zero,
-                  dropdownColor: colorScheme.primaryContainer,
-                  items: _getAutosaveTimes(), 
-                  value: dataController.autosaveIncrement.inSeconds,
-                  onChanged: (val) {
-                    if (val != null) {
-                      dataController.updateAutosaveIncrement(val);
-                    }
-                })),
+                SidedrawerCard(title: 'Autosave Interval:',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    runAlignment: WrapAlignment.center,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      ChoiceChip.elevated(
+                        label: Text('15 Seconds',
+                          style: TextStyle(
+                            color: dataController.autosaveIncrement == Duration(seconds: 15) ? colorScheme.onPrimary : colorScheme.onSecondaryContainer
+                          ),
+                        ),
+                        checkmarkColor: dataController.autosaveIncrement == Duration(seconds: 15) ? colorScheme.onPrimary : colorScheme.onSecondaryContainer,
+                        selectedColor: colorScheme.primary,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        onSelected: (val) {
+                          dataController.updateAutosaveIncrement(15);
+                        },
+                        selected:
+                          dataController.autosaveIncrement == Duration(seconds: 15),
+                        // rotate: false,
+                      ),
+                      ChoiceChip.elevated(
+                        label: Text('30 Seconds',
+                          style: TextStyle(
+                            color: dataController.autosaveIncrement == Duration(seconds: 30) ? colorScheme.onPrimary : colorScheme.onSecondaryContainer
+                          ),
+                        ),
+                        checkmarkColor: dataController.autosaveIncrement == Duration(seconds: 30) ? colorScheme.onPrimary : colorScheme.onSecondaryContainer,
+                        selectedColor: colorScheme.primary,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        onSelected: (val) {
+                          dataController.updateAutosaveIncrement(30);
+                        },
+                        selected:
+                          dataController.autosaveIncrement == Duration(seconds: 30),
+                        // rotate: false,
+                      ),
+                      ChoiceChip.elevated(
+                        label: Text('60 Seconds',
+                          style: TextStyle(
+                            color: dataController.autosaveIncrement == Duration(seconds: 60) ? colorScheme.onPrimary : colorScheme.onSecondaryContainer
+                          ),
+                        ),
+                        checkmarkColor: dataController.autosaveIncrement == Duration(seconds: 60) ? colorScheme.onPrimary : colorScheme.onSecondaryContainer,
+                        selectedColor: colorScheme.primary,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        onSelected: (val) {
+                          dataController.updateAutosaveIncrement(60);
+                        },
+                        selected:
+                          dataController.autosaveIncrement == Duration(seconds: 60),
+                        // rotate: false,
+                      ),
+                    ],
+                  )
+                ),
                  SidedrawerCard(title: 'Contact:', child: ElevatedButton.icon(
                   icon: Icon(Icons.copy, color: colorScheme.onPrimaryContainer,),
                   style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primaryContainer),

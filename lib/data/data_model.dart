@@ -8,8 +8,8 @@ import 'package:linkpad/data/data_controller.dart';
 import 'datetime_parse.dart';
 
 enum DocumentDisplayType {
-  List,
-  Grid,
+  list,
+  grid,
 }
 
 class Document {

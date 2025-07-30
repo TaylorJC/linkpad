@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:linkpad/data/data_controller.dart';
 import 'package:linkpad/data/data_model.dart';
 import 'package:linkpad/data/datetime_parse.dart';
@@ -11,10 +13,12 @@ import 'package:linkpad/widgets/document_page.dart';
 class DocumentDisplay extends StatelessWidget {
   const DocumentDisplay({
     super.key,
+    required this.scrollController,
     required this.displayType,
     required this.crossAxisCount,
   });
 
+  final ScrollController scrollController;
   final DocumentDisplayType displayType;
   final int crossAxisCount;
 
@@ -22,6 +26,40 @@ class DocumentDisplay extends StatelessWidget {
     List<Widget> tiles = List.empty(growable: true);
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final DataController dataController = DataProvider.require(context);
+
+    void showDeleteDialog(Document doc) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Delete ${doc.title}?'),
+          content: Text(
+            'Are you sure you want to delete ${doc.title}?',
+          ),
+          actions: [
+            TextButton(
+              style: ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(colorScheme.errorContainer)
+              ),
+              onPressed: () async {
+                await dataController.removeItem(doc);
+                Navigator.of(context).pop();
+              },
+              child: Text('Delete',
+                style: TextStyle(
+                  color: colorScheme.onErrorContainer
+                )
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
     docs.sort((a, b) => b.lastModified.compareTo(a.lastModified));
 
@@ -39,7 +77,7 @@ class DocumentDisplay extends StatelessWidget {
         parchment = ParchmentDocument.fromJson(jsonDecode(docContent));
       }
 
-      if (displayType == DocumentDisplayType.Grid) {
+      if (displayType == DocumentDisplayType.grid) {
         tiles.add(
           InkWell(
             onTap: () {
@@ -55,30 +93,7 @@ class DocumentDisplay extends StatelessWidget {
               );
             },
             onLongPress: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Delete Document'),
-                    content: Text(
-                      'Are you sure you want to delete ${doc.title}?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () async {
-                          await dataController.removeItem(doc);
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Delete'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text('Cancel'),
-                      ),
-                    ],
-                  );
-                },
-              );
+              showDeleteDialog(doc);
             },
             borderRadius: BorderRadius.circular(8),
             child: GridTile(
@@ -111,7 +126,7 @@ class DocumentDisplay extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
+                                  ),
               ),
               child: Container(
                 height: width * 2,
@@ -148,6 +163,10 @@ class DocumentDisplay extends StatelessWidget {
           ListTile(
             title: Text(doc.title),
             subtitle: Text(dateTimeIntToReadableString(doc.lastModified)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(16)),
+            onLongPress: () async {
+              showDeleteDialog(doc);
+            },
             onTap: () {
               var docContent = dataController.loadDocumentFromDoc(doc);
               ParchmentDocument parchment;
@@ -180,6 +199,7 @@ class DocumentDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final DataController dataController = DataProvider.require(context);
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(12.0),
@@ -214,18 +234,35 @@ class DocumentDisplay extends StatelessWidget {
                 ),
               ],
             )
-          : (displayType == DocumentDisplayType.List
+          : (displayType == DocumentDisplayType.list
                 ? ListView.builder(
+                  controller: scrollController,
                     itemCount: dataController.items.length,
                     itemBuilder: (context, index) {
-                      return getDocTiles(dataController.items, context)[index];
+                      return Animate(
+                        effects: [
+                          FadeEffect(),
+                        ],
+                        child: getDocTiles(dataController.items, context)[index]
+                      );
                     },
                   )
                 : GridView.count(
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
-                    children: getDocTiles(dataController.items, context),
+                    controller: scrollController,
+                    children: AnimateList(
+                      children: getDocTiles(dataController.items, context),
+                      interval: Durations.short1,
+                      effects: [
+                        FadeEffect(),
+                        // SlideEffect(),
+                        // ShimmerEffect(
+                        //   size: 1
+                        // ),
+                      ]
+                    ),
                   )),
     );
   }
