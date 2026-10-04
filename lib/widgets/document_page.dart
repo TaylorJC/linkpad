@@ -28,7 +28,9 @@ class DocumentPage extends StatefulWidget {
 }
 
 class _DocumentPageState extends State<DocumentPage> {
-  late TextEditingController titleController = TextEditingController(text: widget.document.title);
+  late TextEditingController titleController = TextEditingController(
+    text: widget.document.title,
+  );
 
   late FleatherController editorController = FleatherController(
     document: widget.parchment,
@@ -39,33 +41,99 @@ class _DocumentPageState extends State<DocumentPage> {
   final ScrollController scrollController = ScrollController();
 
   late Timer timer;
+  Future<void>? _saveInProgress;
+  bool _isHandlingPop = false;
+  bool _allowPop = false;
 
   @override
   void initState() {
     super.initState();
-    
-    timer = Timer.periodic(
-      widget.dataController.autosaveIncrement, 
-      (timer) {
-        widget.document.saveDocument(titleController, editorController, widget.dataController);
+
+    timer = Timer.periodic(widget.dataController.autosaveIncrement, (
+      timer,
+    ) async {
+      try {
+        await _saveDocument();
+      } catch (error, stackTrace) {
+        _reportSaveFailure(error, stackTrace);
       }
-    );
+    });
   }
 
   @override
   void dispose() {
-    if (titleController.text.trim().isEmpty && editorController.plainTextEditingValue.text.trim().isEmpty) {
-      widget.dataController.removeItem(widget.document);
-    }
-
+    timer.cancel();
     titleController.dispose();
     editorController.dispose();
     editorFocusNode.dispose();
     scrollController.dispose();
-    timer.cancel();
-
 
     super.dispose();
+  }
+
+  Future<void> _saveDocument() {
+    final inProgress = _saveInProgress;
+    if (inProgress != null) return inProgress;
+
+    late final Future<void> save;
+    save = widget.document
+        .saveDocument(titleController, editorController, widget.dataController)
+        .then<void>((_) {})
+        .whenComplete(() {
+          if (identical(_saveInProgress, save)) {
+            _saveInProgress = null;
+          }
+        });
+    _saveInProgress = save;
+    return save;
+  }
+
+  Future<void> _saveBeforePop() async {
+    if (_isHandlingPop) return;
+    _isHandlingPop = true;
+
+    try {
+      final inProgress = _saveInProgress;
+      if (inProgress != null) await inProgress;
+
+      if (titleController.text.trim().isEmpty &&
+          editorController.plainTextEditingValue.text.trim().isEmpty) {
+        await widget.dataController.removeItem(widget.document);
+      } else {
+        await _saveDocument();
+      }
+
+      if (mounted) {
+        setState(() => _allowPop = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.of(context).pop();
+        });
+      }
+    } catch (error, stackTrace) {
+      _reportSaveFailure(error, stackTrace);
+    } finally {
+      _isHandlingPop = false;
+    }
+  }
+
+  void _reportSaveFailure(Object error, StackTrace stackTrace) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'linkpad',
+        context: ErrorDescription(
+          'while saving a document before leaving its page',
+        ),
+      ),
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save document. Please try again.'),
+        ),
+      );
+    }
   }
 
   void toggleAttribute(ParchmentAttribute attr) {
@@ -88,66 +156,101 @@ class _DocumentPageState extends State<DocumentPage> {
     //   // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Autosaved'),));
     // });
 
-    return FocusTraversalGroup(
-      policy: ReadingOrderTraversalPolicy(),
-      child: Scaffold(
-        endDrawer: SizedBox(
-          height: MediaQuery.sizeOf(context).height,
-          width: MediaQuery.sizeOf(context).width * 0.8,
-          child: DocumentDrawer(document: widget.document)),
-        appBar: DocumentAppBar(
-          titleController: titleController, 
-          focusNode: editorFocusNode, 
-          editorController: editorController, 
-          document: widget.document,
-          dataController: dataController,
-        ),
-        backgroundColor: colorScheme.surfaceContainerHighest,
-        body: Padding(
-          padding: EdgeInsets.only(
-            // bottom: MediaQuery.viewPaddingOf(context).bottom,
-            left: 8.0,
-            right: 8.0,
+    return PopScope<void>(
+      canPop: _allowPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _saveBeforePop();
+      },
+      child: FocusTraversalGroup(
+        policy: ReadingOrderTraversalPolicy(),
+        child: Scaffold(
+          endDrawer: SizedBox(
+            height: MediaQuery.sizeOf(context).height,
+            width: MediaQuery.sizeOf(context).width * 0.8,
+            child: DocumentDrawer(document: widget.document),
           ),
-          child: Column(
-            children: [
-              HeroTitle(document: widget.document, focusNode: editorFocusNode, titleController: titleController),
-              Expanded(
-                child: FleatherEditor(
-                  autofocus: widget.document.title != '',
-                  contextMenuBuilder: (context, editorState) {
-                    final List<ContextMenuButtonItem> buttonItems =
-                      editorState.contextMenuButtonItems;
-                    
-                    buttonItems.addAll([
-                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.bold); editorState.hideToolbar(); }, label: 'Bold'),
-                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.italic); editorState.hideToolbar(); }, label: 'Italicize'),
-                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.underline); editorState.hideToolbar(); }, label: 'Underline'),
-                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.strikethrough); editorState.hideToolbar(); }, label: 'Strike-through'),
-                      ContextMenuButtonItem(onPressed: () { toggleAttribute(ParchmentAttribute.inlineCode); editorState.hideToolbar(); }, label: 'Inline-Code'),
-                    ]);
-
-                    return AdaptiveTextSelectionToolbar.buttonItems(
-                      anchors: editorState.contextMenuAnchors,
-                      buttonItems: buttonItems,
-                    );
-                  },
-                  padding: EdgeInsetsGeometry.all(12),
+          appBar: DocumentAppBar(
+            titleController: titleController,
+            focusNode: editorFocusNode,
+            editorController: editorController,
+            document: widget.document,
+            dataController: dataController,
+          ),
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          body: Padding(
+            padding: EdgeInsets.only(
+              // bottom: MediaQuery.viewPaddingOf(context).bottom,
+              left: 8.0,
+              right: 8.0,
+            ),
+            child: Column(
+              children: [
+                HeroTitle(
+                  document: widget.document,
                   focusNode: editorFocusNode,
-                  controller: editorController,
+                  titleController: titleController,
                 ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: DocumentToolbar(fleatherController: editorController),
-              ).animate(
-                effects: [
-                  SlideEffect(
-                    begin: Offset(0, 1)
-                  )
-                ]
-              )
-            ]
+                Expanded(
+                  child: FleatherEditor(
+                    autofocus: widget.document.title != '',
+                    contextMenuBuilder: (context, editorState) {
+                      final List<ContextMenuButtonItem> buttonItems =
+                          editorState.contextMenuButtonItems;
+
+                      buttonItems.addAll([
+                        ContextMenuButtonItem(
+                          onPressed: () {
+                            toggleAttribute(ParchmentAttribute.bold);
+                            editorState.hideToolbar();
+                          },
+                          label: 'Bold',
+                        ),
+                        ContextMenuButtonItem(
+                          onPressed: () {
+                            toggleAttribute(ParchmentAttribute.italic);
+                            editorState.hideToolbar();
+                          },
+                          label: 'Italicize',
+                        ),
+                        ContextMenuButtonItem(
+                          onPressed: () {
+                            toggleAttribute(ParchmentAttribute.underline);
+                            editorState.hideToolbar();
+                          },
+                          label: 'Underline',
+                        ),
+                        ContextMenuButtonItem(
+                          onPressed: () {
+                            toggleAttribute(ParchmentAttribute.strikethrough);
+                            editorState.hideToolbar();
+                          },
+                          label: 'Strike-through',
+                        ),
+                        ContextMenuButtonItem(
+                          onPressed: () {
+                            toggleAttribute(ParchmentAttribute.inlineCode);
+                            editorState.hideToolbar();
+                          },
+                          label: 'Inline-Code',
+                        ),
+                      ]);
+
+                      return AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: editorState.contextMenuAnchors,
+                        buttonItems: buttonItems,
+                      );
+                    },
+                    padding: EdgeInsetsGeometry.all(12),
+                    focusNode: editorFocusNode,
+                    controller: editorController,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: DocumentToolbar(fleatherController: editorController),
+                ).animate(effects: [SlideEffect(begin: Offset(0, 1))]),
+              ],
+            ),
           ),
         ),
       ),
